@@ -10,35 +10,40 @@ ENT.Instructions	= ""
 
 function ENT:SetupDataTables()
 	self:NetworkVar( "String", 0, "WeaponClass")
+	self:NetworkVarNotify("WeaponClass", self.SetupNewWeapon)
 end
 
 function ENT:Initialize()
+	if SERVER then
+		self:SetUseType( SIMPLE_USE )
+		self:SetModel(self.WorldModel or "models/weapons/w_rif_ak47.mdl")
+		--self:SetWeaponClass(self.WepClass)
+	end
 
-	self:SetMoveType( MOVETYPE_FLY )
 	self:SetSolid( SOLID_OBB )
-	--self:SetCollisionBounds(Vector(-5, -10, -3), Vector(5, 10, 3))
-	--self:UseTriggerBounds(true, 1)
-	self:SetMoveType(MOVETYPE_FLY)
-	self:PhysicsInitBox(Vector(-5, -10, -3), Vector(5, 10, 3))
-	self:GetPhysicsObject():EnableCollisions(false)
+	self:SetMoveType(MOVETYPE_NOCLIP)
+	self:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
+	--self:PhysicsInitBox(Vector(-5, -10, -3), Vector(5, 10, 3))
+	--self:GetPhysicsObject():EnableCollisions(false)
 	self:SetNotSolid(true)
 	self:DrawShadow( false )
 	self.TriggerPos = self:GetPos()
 	
-	if SERVER then
-		self:SetUseType( SIMPLE_USE )
-		self:SetWeaponClass(self.WepClass)
-	else
-		local wep = weapons.Get(self:GetWeaponClass())
-		if wep and wep.DrawWorldModel then self.WorldModelFunc = wep.DrawWorldModel end
-	end
 end
 
-function ENT:SetWepClass(class)
+function ENT:SetupNewWeapon(name, old, new)
 	if IsValid(self.button) then
-		self.button:SetWepClass(class)
+		self.button:SetWepClass(new)
 	end
-	self:SetWeaponClass(class)
+	
+	local weapon = weapons.Get(new)
+	local model = "models/weapons/w_rif_ak47.mdl"
+	if weapon != nil then
+		model = weapon.WM or weapon.WorldModel
+		self.WorldModel = model
+		if weapon.DrawWorldModel then self.WorldModelFunc = weapon.DrawWorldModel end
+	end
+	self:SetModel(model)
 end
 
 function ENT:CreateTriggerZone(reroll)
@@ -51,7 +56,7 @@ function ENT:CreateTriggerZone(reroll)
 		self.button.RerollingAtts = reroll
 		self.button:SetPaPOwner(self.Owner)
 		self.button.wep = self
-		self.button:SetWepClass(self.WepClass)
+		self.button:SetWepClass(self:GetWeaponClass())
 	end
 end
 

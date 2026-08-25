@@ -421,5 +421,17 @@ local function onPhysgunDrop( ply, ent )
 
 end
 
+--[[local function invisWallUseThrough( ply, ent )
+	if IsValid(ent) and ent:GetClass() == "invis_wall" then
+		local tr = util.TraceLine({
+			start = ply:GetShootPos(),
+			endpos = ply:GetShootPos() + ply:GetAimVector()*80,
+			filter = ply
+		})
+		return tr.Entity
+	end
+end]]
+
 hook.Add( "PhysgunPickup", "nz.OnPhysPick", onPhysgunPickup )
 hook.Add( "PhysgunDrop", "nz.OnDrop", onPhysgunDrop )
+--hook.Add("FindUseEntity", "nzUseThroughInvisWall", invisWallUseThrough)

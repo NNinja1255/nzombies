@@ -1,7 +1,7 @@
 local meleetypes = {
 	[DMG_CLUB] = true,
 	[DMG_SLASH] = true,
-	[DMG_CRUSH] = true,
+	[DMG_CRUSH] = true
 }
 
 function nzEnemies:OnEnemyKilled(enemy, attacker, dmginfo, hitgroup)
@@ -79,8 +79,8 @@ function GM:EntityTakeDamage(zombie, dmginfo)
 				if zombie:Health() > dmginfo:GetDamage() then
 					if data.onhit then data.onhit(zombie, attacker, dmginfo, hitgroup) end
 				elseif !zombie.MarkedForDeath then
-					if data.deathfunc then data.deathfunc(zombie, attacker, dmginfo, hitgroup) end
-					hook.Call("OnBossKilled", nil, zombie)
+					--if data.deathfunc then data.deathfunc(zombie, attacker, dmginfo, hitgroup) end
+					--hook.Call("OnBossKilled", nil, zombie)
 					zombie.MarkedForDeath = true
 				end
 			end
@@ -127,3 +127,8 @@ local function OnRagdollCreated( ent )
 	end
 end
 hook.Add("OnEntityCreated", "nzEnemies_OnEntityCreated", OnRagdollCreated)
+
+hook.Add("OnBossKilled", "nzEnemies_OnBossKilled", function(zombie)
+	local data = nzRound:GetBossData(zombie.NZBossType)
+	if data.deathfunc then data.deathfunc(zombie, attacker, dmginfo, hitgroup) end
+end)

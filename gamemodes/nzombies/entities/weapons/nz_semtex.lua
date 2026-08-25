@@ -13,6 +13,7 @@ if CLIENT then
 	SWEP.DrawAmmo			= false
 	SWEP.DrawCrosshair		= false
 
+	SWEP.NZHudIcon = Material("grenade_semtex.png", "unlitgeneric smooth")
 end
 
 
@@ -46,7 +47,6 @@ SWEP.NextReload				= 1
 
 SWEP.cooktime = 0
 SWEP.CrossShrink = 50
-SWEP.restorerun = 0
 SWEP.ct = nil
 SWEP.FuckedUp = false
 
@@ -59,12 +59,10 @@ end
 function SWEP:Deploy()
 	self.ct = CurTime()
 	self.Owner:GetViewModel():SetPlaybackRate( 1.5 )
-	self.restorerun = self.Owner:GetRunSpeed()
 	self:SendWeaponAnim(ACT_VM_PULLBACK_HIGH)
 	--if !self.Owner:GetUsingSpecialWeapon() then
 		--self.Owner:EquipPreviousWeapon()
 	--end
-	timer.Simple(0.1, function() self.Owner:SetRunSpeed( self.Owner:GetWalkSpeed() ) end)
 end
 
 function SWEP:PrimaryAttack()
@@ -134,13 +132,28 @@ function SWEP:DrawHUD()
 end
 
 function SWEP:OnRemove()
-	if IsValid(self.Owner) then
-		self.Owner:SetRunSpeed(self.restorerun)
-	end
+	
 end
 
 function SWEP:Holster( wep )
-	self.Owner:SetRunSpeed(self.restorerun)
 	--if not IsFirstTimePredicted() then return end
 	return true
 end
+
+sound.Add(
+{
+    name = "Weapon_Semtex.Pin",
+    channel = CHAN_WEAPON,
+    volume = 1.0,
+    soundlevel = 80,
+    sound = "nz/m67/semtex_pin_pull.mp3"
+})
+
+sound.Add(
+{
+    name = "Weapon_Semtex.Charge",
+    channel = CHAN_WEAPON,
+    volume = 1.0,
+    soundlevel = 80,
+    sound = "nz/m67/semtex_charge.mp3"
+})

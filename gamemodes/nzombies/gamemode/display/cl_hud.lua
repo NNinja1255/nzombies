@@ -4,6 +4,9 @@ nzDisplay = nzDisplay or AddNZModule("Display")
 local bloodline_points = Material("bloodline_score2.png", "unlitgeneric smooth")
 local bloodline_gun = Material("cod_hud.png", "unlitgeneric smooth")
 
+local drawhud = cvars.Bool("cl_drawhud")
+cvars.AddChangeCallback( "cl_drawhud", function(cvar, old, new) drawhud = tobool(new) end )
+
 --[[local bloodDecals = {
 	Material("decals/blood1"),
 	Material("decals/blood2"),
@@ -29,161 +32,157 @@ if GetConVar("nz_hud_show_health_mp") == nil then
 end
 
 local function StatesHud()
-	if GetConVar("cl_drawhud"):GetBool() then
-		local text = ""
-		local font = "nz.display.hud.main"
-		local w = ScrW() / 2
-		if nzRound:InState( ROUND_WAITING ) then
-			text = "Waiting for players. Type /ready to ready up."
-			font = "nz.display.hud.small"
-		elseif nzRound:InState( ROUND_CREATE ) then
-			text = "Creative Mode"
-		elseif nzRound:InState( ROUND_GO ) then
-			text = "Game Over"
-		end
-		draw.SimpleText(text, font, w, ScrH() * 0.85, Color(200, 0, 0,255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+	if !drawhud then return end
+	
+	local text = ""
+	local font = "nz.display.hud.main"
+	local w = ScrW() / 2
+	if nzRound:InState( ROUND_WAITING ) then
+		text = "Waiting for players. Type /ready to ready up."
+		font = "nz.display.hud.small"
+	elseif nzRound:InState( ROUND_CREATE ) then
+		text = "Creative Mode"
+	elseif nzRound:InState( ROUND_GO ) then
+		text = "Game Over"
 	end
+	draw.SimpleText(text, font, w, ScrH() * 0.85, Color(200, 0, 0,255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 end
 
 local tbl = {Entity(3), Entity(1), Entity(3), Entity(4), Entity(5)}
 
 local function ScoreHud()
-	if GetConVar("cl_drawhud"):GetBool() then
-		if nzRound:InProgress() then
+	if !drawhud then return end
+	if !nzRound:InProgress() then return end
+	
+	local scale = (ScrW() / 1920 + 1) / 2
+	local offset = 0
 
-			local scale = (ScrW() / 1920 + 1) / 2
-			local offset = 0
+	for k,v in ipairs(player.GetAll()) do
+		local hp = v:Health()
+		local maxhp = v:GetMaxHealth()
+		local hpscale = math.Clamp(hp / maxhp, 0, 1)
+		--if hp == 0 then hp = "Dead" elseif nzRevive.Players[v:EntIndex()] then hp = "Downed" else hp = hp .. " HP"  end
+		if v:GetPoints() >= 0 then
 
-			for k,v in pairs(player.GetAll()) do
-				local hp = v:Health()
-				local maxhp = v:GetMaxHealth()
-				local hpscale = math.Clamp(hp / maxhp, 0, 1)
-				--if hp == 0 then hp = "Dead" elseif nzRevive.Players[v:EntIndex()] then hp = "Downed" else hp = hp .. " HP"  end
-				if v:GetPoints() >= 0 then
+			local text = ""
+			local nameoffset = 0
+			if GetConVar("nz_hud_points_show_names"):GetBool() then
+				local nick
+				if #v:Nick() >= 20 then
+					nick = string.sub(v:Nick(), 1, 20)  -- limit name to 20 chars
+				else
+					nick = v:Nick()
+				end
+				text = nick
+				nameoffset = 10
+			end
 
-					local text = ""
-					local nameoffset = 0
-					if GetConVar("nz_hud_points_show_names"):GetBool() then
-						local nick
-						if #v:Nick() >= 20 then
-							nick = string.sub(v:Nick(), 1, 20)  -- limit name to 20 chars
-						else
-							nick = v:Nick()
-						end
-						text = nick
-						nameoffset = 10
-					end
+			local font = "nz.display.hud.small"
 
-					local font = "nz.display.hud.small"
+			surface.SetFont(font)
 
-					surface.SetFont(font)
+			local textW, textH = surface.GetTextSize(text)
 
-					local textW, textH = surface.GetTextSize(text)
+			if LocalPlayer() == v then
+				offset = offset + textH + 5 -- change this if you change the size of nz.display.hud.medium
+			else
+				offset = offset + textH
+			end
 
-					if LocalPlayer() == v then
-						offset = offset + textH + 5 -- change this if you change the size of nz.display.hud.medium
+			--surface.SetDrawColor(200,200,200)
+			local index = v:EntIndex()
+			local color = player.GetColorByIndex(v:EntIndex())
+			local blood = player.GetBloodByIndex(v:EntIndex())
+			--for i = 0, 8 do
+				--surface.SetMaterial(bloodDecals[((index + i - 1) % #bloodDecals) + 1 ])
+				surface.SetMaterial(blood)
+				if GetConVar("nz_hud_show_health"):GetBool() and (GetConVar("nz_hud_show_health_mp"):GetBool() or LocalPlayer() == v) then
+					if hp == 0 or nzRevive.Players[v:EntIndex()] then
+						surface.SetDrawColor(0,0,0)
 					else
-						offset = offset + textH
+						surface.SetDrawColor(100,100,100)
 					end
-
-					--surface.SetDrawColor(200,200,200)
-					local index = v:EntIndex()
-					local color = player.GetColorByIndex(v:EntIndex())
-					local blood = player.GetBloodByIndex(v:EntIndex())
-					--for i = 0, 8 do
-						--surface.SetMaterial(bloodDecals[((index + i - 1) % #bloodDecals) + 1 ])
-						surface.SetMaterial(blood)
-						if GetConVar("nz_hud_show_health"):GetBool() and (GetConVar("nz_hud_show_health_mp"):GetBool() or LocalPlayer() == v) then
-							if hp == 0 or nzRevive.Players[v:EntIndex()] then
-								surface.SetDrawColor(0,0,0)
-							else
-								surface.SetDrawColor(100,100,100)
-							end
-							surface.DrawTexturedRect(ScrW() - textW - 180, ScrH() - 275 * scale - offset, textW + 150, 45)
-							if hp ~= 0 then
-								if nzRevive.Players[v:EntIndex()] then
-									surface.SetDrawColor(100,100,100)
-								else
-									surface.SetDrawColor(200,200,200)
-								end
-								surface.DrawTexturedRect(ScrW() - textW - 180, ScrH() - 275 * scale - offset, (textW + 150)*hpscale, 45)
-							end
+					surface.DrawTexturedRect(ScrW() - textW - 180, ScrH() - 275 * scale - offset, textW + 150, 45)
+					if hp ~= 0 then
+						if nzRevive.Players[v:EntIndex()] then
+							surface.SetDrawColor(100,100,100)
 						else
 							surface.SetDrawColor(200,200,200)
-							surface.DrawTexturedRect(ScrW() - textW - 180, ScrH() - 275 * scale - offset, textW + 150, 45)
 						end
-					--end
-					--surface.DrawTexturedRect(ScrW() - 325*scale - numname * 10, ScrH() - 285*scale - (30*k), 250 + numname*10, 35)
-					if text then draw.SimpleText(text, font, ScrW() - textW - 60, ScrH() - 255 * scale - offset, color, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER) end
-					if LocalPlayer() == v then
-						font = "nz.display.hud.medium"
+						surface.DrawTexturedRect(ScrW() - textW - 180, ScrH() - 275 * scale - offset, (textW + 150)*hpscale, 45)
 					end
-					draw.SimpleText(v:GetPoints(), font, ScrW() - textW - 60 - nameoffset, ScrH() - 255 * scale - offset, color, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
-					v.PointsSpawnPosition = {x = ScrW() - textW - 170, y = ScrH() - 255 * scale - offset}
+				else
+					surface.SetDrawColor(200,200,200)
+					surface.DrawTexturedRect(ScrW() - textW - 180, ScrH() - 275 * scale - offset, textW + 150, 45)
 				end
+			--end
+			--surface.DrawTexturedRect(ScrW() - 325*scale - numname * 10, ScrH() - 285*scale - (30*k), 250 + numname*10, 35)
+			if text then draw.SimpleText(text, font, ScrW() - textW - 60, ScrH() - 255 * scale - offset, color, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER) end
+			if LocalPlayer() == v then
+				font = "nz.display.hud.medium"
 			end
+			draw.SimpleText(v:GetPoints(), font, ScrW() - textW - 60 - nameoffset, ScrH() - 255 * scale - offset, color, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+			v.PointsSpawnPosition = {x = ScrW() - textW - 170, y = ScrH() - 255 * scale - offset}
 		end
 	end
 end
 
 local function GunHud()
-	if GetConVar("cl_drawhud"):GetBool() then
-		if !LocalPlayer():IsNZMenuOpen() then
-			local wep = LocalPlayer():GetActiveWeapon()
-			local w,h = ScrW(), ScrH()
-			local scale = ((w/1920)+1)/2
+	if !drawhud then return end
+	if LocalPlayer():IsNZMenuOpen() then return end
+	local wep = LocalPlayer():GetActiveWeapon()
+	local w,h = ScrW(), ScrH()
+	local scale = ((w/1920)+1)/2
 
-			surface.SetMaterial(bloodline_gun)
-			surface.SetDrawColor(200,200,200)
-			surface.DrawTexturedRect(w - 630*scale, h - 225*scale, 600*scale, 225*scale)
-			
-			if IsValid(wep) then
-				if wep:GetClass() == "nz_multi_tool" then
-					draw.SimpleTextOutlined(nzTools.ToolData[wep.ToolMode].displayname or wep.ToolMode, "nz.display.hud.small", w - 240*scale, h - 125*scale, color_white, TEXT_ALIGN_RIGHT, TEXT_ALIGN_BOTTOM, 2, color_black)
-					draw.SimpleTextOutlined(nzTools.ToolData[wep.ToolMode].desc or "", "nz.display.hud.smaller", w - 240*scale, h - 90*scale, color_white, TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP, 2, color_black)
+	surface.SetMaterial(bloodline_gun)
+	surface.SetDrawColor(200,200,200)
+	surface.DrawTexturedRect(w - 630*scale, h - 225*scale, 600*scale, 225*scale)
+	
+	if IsValid(wep) then
+		if wep:GetClass() == "nz_multi_tool" then
+			draw.SimpleTextOutlined(nzTools.ToolData[wep.ToolMode].displayname or wep.ToolMode, "nz.display.hud.small", w - 240*scale, h - 125*scale, color_white, TEXT_ALIGN_RIGHT, TEXT_ALIGN_BOTTOM, 2, color_black)
+			draw.SimpleTextOutlined(nzTools.ToolData[wep.ToolMode].desc or "", "nz.display.hud.smaller", w - 240*scale, h - 90*scale, color_white, TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP, 2, color_black)
+		else
+			local name = wep:GetPrintName()					
+			local x = 250
+			local y = 165
+			if wep:GetPrimaryAmmoType() != -1 then
+				local clip
+				if wep.Primary.ClipSize and wep.Primary.ClipSize != -1 then
+					draw.SimpleTextOutlined("/"..wep:Ammo1(), "nz.display.hud.ammo2", ScrW() - 310*scale, ScrH() - 120*scale, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_BOTTOM, 2, color_black)
+					clip = wep:Clip1()
+					x = 315
+					y = 155
 				else
-					local name = wep:GetPrintName()					
-					local x = 250
-					local y = 165
-					if wep:GetPrimaryAmmoType() != -1 then
-						local clip
-						if wep.Primary.ClipSize and wep.Primary.ClipSize != -1 then
-							draw.SimpleTextOutlined("/"..wep:Ammo1(), "nz.display.hud.ammo2", ScrW() - 310*scale, ScrH() - 120*scale, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_BOTTOM, 2, color_black)
-							clip = wep:Clip1()
-							x = 315
-							y = 155
-						else
-							clip = wep:Ammo1()
-						end
-						draw.SimpleTextOutlined(clip, "nz.display.hud.ammo", ScrW() - x*scale, ScrH() - 115*scale, color_white, TEXT_ALIGN_RIGHT, TEXT_ALIGN_BOTTOM, 2, color_black)
-						x = x + 80
-					end
-					
-					draw.SimpleTextOutlined(name, "nz.display.hud.small", ScrW() - x*scale, ScrH() - 120*scale, color_white, TEXT_ALIGN_RIGHT, TEXT_ALIGN_BOTTOM, 2, color_black)
-					
-					x = 270
-					if wep:GetSecondaryAmmoType() != -1 then
-						local clip
-						if wep.Secondary.ClipSize and wep.Secondary.ClipSize != -1 then
-							draw.SimpleTextOutlined("/"..wep:Ammo2(), "nz.display.hud.ammo4", ScrW() - x*scale, ScrH() - y*scale, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_BOTTOM, 2, color_black)
-							clip = wep:Clip2()
-							x = x + 3
-						else
-							clip = wep:Ammo2()
-						end
-						draw.SimpleTextOutlined(clip, "nz.display.hud.ammo3", ScrW() - x*scale, ScrH() - y*scale, color_white, TEXT_ALIGN_RIGHT, TEXT_ALIGN_BOTTOM, 2, color_black)
-						x = x + 80
-					end
-					
-					--[[if clip >= 0 then
-						draw.SimpleTextOutlined(name, "nz.display.hud.small", ScrW() - 390*scale, ScrH() - 120*scale, Color(255,255,255,255), TEXT_ALIGN_RIGHT, TEXT_ALIGN_BOTTOM, 2, Color(0,0,0))
-						draw.SimpleTextOutlined(clip, "nz.display.hud.ammo", ScrW() - 315*scale, ScrH() - 115*scale, Color(255,255,255,255), TEXT_ALIGN_RIGHT, TEXT_ALIGN_BOTTOM, 2, Color(0,0,0))
-						draw.SimpleTextOutlined("/"..wep:Ammo1(), "nz.display.hud.ammo2", ScrW() - 310*scale, ScrH() - 120*scale, Color(255,255,255,255), TEXT_ALIGN_LEFT, TEXT_ALIGN_BOTTOM, 2, Color(0,0,0))
-					else
-						draw.SimpleTextOutlined(name, "nz.display.hud.small", ScrW() - 250*scale, ScrH() - 120*scale, color_white, TEXT_ALIGN_RIGHT, TEXT_ALIGN_BOTTOM, 2, color_black)
-					end]]
+					clip = wep:Ammo1()
 				end
+				draw.SimpleTextOutlined(clip, "nz.display.hud.ammo", ScrW() - x*scale, ScrH() - 115*scale, color_white, TEXT_ALIGN_RIGHT, TEXT_ALIGN_BOTTOM, 2, color_black)
+				x = x + 80
 			end
+			
+			draw.SimpleTextOutlined(name, "nz.display.hud.small", ScrW() - x*scale, ScrH() - 120*scale, color_white, TEXT_ALIGN_RIGHT, TEXT_ALIGN_BOTTOM, 2, color_black)
+			
+			x = 270
+			if wep:GetSecondaryAmmoType() != -1 then
+				local clip
+				if wep.Secondary.ClipSize and wep.Secondary.ClipSize != -1 then
+					draw.SimpleTextOutlined("/"..wep:Ammo2(), "nz.display.hud.ammo4", ScrW() - x*scale, ScrH() - y*scale, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_BOTTOM, 2, color_black)
+					clip = wep:Clip2()
+					x = x + 3
+				else
+					clip = wep:Ammo2()
+				end
+				draw.SimpleTextOutlined(clip, "nz.display.hud.ammo3", ScrW() - x*scale, ScrH() - y*scale, color_white, TEXT_ALIGN_RIGHT, TEXT_ALIGN_BOTTOM, 2, color_black)
+				x = x + 80
+			end
+			
+			--[[if clip >= 0 then
+				draw.SimpleTextOutlined(name, "nz.display.hud.small", ScrW() - 390*scale, ScrH() - 120*scale, Color(255,255,255,255), TEXT_ALIGN_RIGHT, TEXT_ALIGN_BOTTOM, 2, Color(0,0,0))
+				draw.SimpleTextOutlined(clip, "nz.display.hud.ammo", ScrW() - 315*scale, ScrH() - 115*scale, Color(255,255,255,255), TEXT_ALIGN_RIGHT, TEXT_ALIGN_BOTTOM, 2, Color(0,0,0))
+				draw.SimpleTextOutlined("/"..wep:Ammo1(), "nz.display.hud.ammo2", ScrW() - 310*scale, ScrH() - 120*scale, Color(255,255,255,255), TEXT_ALIGN_LEFT, TEXT_ALIGN_BOTTOM, 2, Color(0,0,0))
+			else
+				draw.SimpleTextOutlined(name, "nz.display.hud.small", ScrW() - 250*scale, ScrH() - 120*scale, color_white, TEXT_ALIGN_RIGHT, TEXT_ALIGN_BOTTOM, 2, color_black)
+			end]]
 		end
 	end
 end
@@ -501,41 +500,60 @@ local function EndChangeRound()
 	roundchangeending = true
 end
 
-local grenade_icon = Material("grenade.png", "unlitgeneric smooth")
-
-local grenadeicons = {
-	["nz_monkey_bomb"] = Material("monkey_bomb.png", "unlitgeneric smooth"),
-	["nz_gersh_device"] = Material("gersh_device.png", "unlitgeneric smooth"),
-	["nz_qed"] = Material("Quantum_Entanglement_Device.png", "unlitgeneric smooth"),
-	["nz_hellsretriever"] = Material("hell_retriever.png", "unlitgeneric smooth"),
-	["nz_hellsredeemer"] = Material("nz_hellsredeemer.png", "unlitgeneric smooth")
-}
+local grenade_icon = Material("grenade-256.png", "unlitgeneric smooth")
+local specialgrenade_icon = Material("grenade-256.png", "unlitgeneric smooth")
 
 local function DrawGrenadeHud()
+	if !drawhud then return end
+	
 	local num = LocalPlayer():GetAmmoCount(GetNZAmmoID("grenade") or -1)
 	local numspecial = LocalPlayer():GetAmmoCount(GetNZAmmoID("specialgrenade") or -1)
 	local scale = (ScrW()/1920 + 1)/2
 
 	surface.SetDrawColor(255,255,255)
 	
-	if num > 0 then
-		surface.SetMaterial(grenade_icon)
+	
+	local gren = LocalPlayer():GetSpecialWeaponFromCategory( "grenade" )
+	if num > 0 and IsValid(gren) then
+		surface.SetMaterial(gren.NZHudIcon or grenade_icon)
+		
 		for i = num, 1, -1 do
 			surface.DrawTexturedRect(ScrW() - 275*scale - i*15*scale, ScrH() - 90*scale, 40*scale, 40*scale)
 		end
 	end
 	
-	if numspecial > 0 then
-		for k, v in pairs(grenadeicons) do
-			if LocalPlayer():HasWeapon(k) then
-				surface.SetMaterial(v)
-				for i = numspecial, 1, -1 do
-					surface.DrawTexturedRect(ScrW() - 380*scale - i*15*scale, ScrH() - 90*scale, 40*scale, 40*scale)
-				end
-				break
-			end
+	local specialgren = LocalPlayer():GetSpecialWeaponFromCategory( "specialgrenade" )
+	if num > 0 and IsValid(specialgren) then
+		if specialgren.NZHudIcon then
+			surface.SetMaterial(specialgren.NZHudIcon)
+		else
+			surface.SetMaterial(specialgrenade_icon)
+			surface.SetDrawColor(255,127,127)
+		end
+		
+		for i = numspecial, 1, -1 do
+			surface.DrawTexturedRect(ScrW() - 380*scale - i*15*scale, ScrH() - 90*scale, 40*scale, 40*scale)
 		end
 	end
+	
+end
+
+local shield_icon = Material("icon16/shield.png", "unlitgeneric smooth")
+
+local function DrawShieldHud()
+	if !drawhud then return end
+	
+	local shield = LocalPlayer():GetSpecialWeaponFromCategory( "shield" )
+	if !IsValid(shield) then return end
+	
+	local scale = (ScrW()/1920 + 1)/2
+
+	surface.SetDrawColor(255,255,255)
+	surface.SetMaterial(shield.NZHudIcon or shield_icon)
+	surface.DrawTexturedRect(ScrW() - 180*scale, ScrH() - 200*scale, 40*scale, 40*scale)
+	
+	local font = "nz.display.hud.small"
+	draw.SimpleText("["..input.GetKeyName(nzSpecialWeapons.Keys.shield).."]", font, ScrW() - 160*scale, ScrH() - 160*scale, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
 end
 
 local afsymbol = Material("vgui/afterlife_blue")
@@ -546,7 +564,7 @@ local function AfterlifeHud()
 	if LocalPlayer():GetNW2Bool("IsInAfterlife") then
 		surface.SetMaterial(afsymbolwhite)
 		surface.SetDrawColor(128,128,128)
-		surface.DrawTexturedRect(ScrW()*0.5 - 64, ScrH() - 128, 128, 64)
+		surface.DrawTexturedRect(ScrW()/2 - 64, ScrH() - 128, 128, 64)
 		
 		--(CurTime() - v.DownTime)*(150/GetConVar("nz_downtime"):GetFloat())
 		local clone = LocalPlayer():GetNW2Entity("AfterlifeClone")
@@ -560,7 +578,7 @@ local function AfterlifeHud()
 		
 		surface.SetMaterial(afsymbol)
 		surface.SetDrawColor(255,255,255)
-		surface.DrawTexturedRectUV( ScrW()*0.5 - 64, ScrH() - 128, 128 - remap*128, 64, 0, 0, 1-remap, 1 )
+		surface.DrawTexturedRectUV( ScrW()/2 - 64, ScrH() - 128, 128 - remap*128, 64, 0, 0, 1-remap, 1 )
 		return
 	end
 
@@ -580,12 +598,17 @@ end
 hook.Add("HUDPaint", "pointsNotifcationHUD", DrawPointsNotification )
 hook.Add("HUDPaint", "roundHUD", StatesHud )
 hook.Add("HUDPaint", "scoreHUD", ScoreHud )
-hook.Add("HUDPaint", "gunHUD", GunHud )
+hook.Add("HUDPaint", "gunHUD", function() 
+	GunHud()
+	DrawShieldHud()
+	DrawGrenadeHud()
+end)
 hook.Add("HUDPaint", "powerupHUD", PowerUpsHud )
 hook.Add("HUDPaint", "perksHUD", PerksHud )
 hook.Add("HUDPaint", "vultureVision", VultureVision )
 hook.Add("HUDPaint", "roundnumHUD", RoundHud )
-hook.Add("HUDPaint", "grenadeHUD", DrawGrenadeHud )
+--hook.Add("HUDPaint", "grenadeHUD", DrawGrenadeHud )
+--hook.Add("HUDPaint", "shieldHUD", DrawShieldHud )
 if nzAfterlife then hook.Add("HUDPaint", "afterlifeHUD", AfterlifeHud ) end
 
 hook.Add("OnRoundPreparation", "BeginRoundHUDChange", StartChangeRound)

@@ -8,15 +8,19 @@ local traceents = {
 		if !wep then return "INVALID WEAPON" end
 		local name = wep.PrintName
 		local ammo_price = math.Round((price - (price % 10))/2)
+		local ammo_type = wep.Primary.Ammo
+		if wep.NZSpecialWeaponData and wep.NZSpecialWeaponData.MaxAmmo then
+			ammo_type = wep.NZSpecialCategory
+		end
 		local text = ""
 
 		if !LocalPlayer():HasWeapon( wepclass ) then
 			text = "Press E to buy " .. name .." (Cost: " .. price .. ")"
-		elseif string.lower(wep.Primary.Ammo) != "none" then
+		elseif ammo_type != "none" then
 			if LocalPlayer():GetWeapon( wepclass ):HasNZModifier("pap") then
-				text = "Press E to refill upgraded " .. wep.Primary.Ammo .." ammunition (Cost: " .. 4500 .. ")"
+				text = "Press E to refill upgraded " .. ammo_type .." ammunition (Cost: " .. 4500 .. ")"
 			else
-				text = "Press E to refill " .. wep.Primary.Ammo .." ammunition (Cost: " .. ammo_price .. ")"
+				text = "Press E to refill " .. ammo_type .." ammunition (Cost: " .. ammo_price .. ")"
 			end
 		else
 			text = "You already have this weapon"
@@ -106,7 +110,7 @@ local traceents = {
 			text = "The Wunderfizz Orb is currently at another location"
 		elseif ent:GetBeingUsed() then
 			if ent:GetUser() == LocalPlayer() and ent:GetPerkID() != "" and !ent:GetIsTeddy() then
-				text = "Press E to take "..nzPerks:Get(ent:GetPerkID()).name.."from the Wunderfizz"
+				text = "Press E to take "..nzPerks:Get(ent:GetPerkID()).name.." from the Wunderfizz"
 			else
 				text = "Currently in use"
 			end
@@ -119,6 +123,17 @@ local traceents = {
 		end
 
 		return text
+	end,
+	["wunderfizz_windup"] = function(ent)
+		if ent:GetPerkID() == "teddy" then
+			return ""
+		end
+		
+		if ent:GetUser() != LocalPlayer() or ent:GetWinding() then
+			return "Currently in use"
+		end
+		
+		return "Press E to take "..nzPerks:Get(ent:GetPerkID()).name.." from the Wunderfizz"
 	end,
 }
 

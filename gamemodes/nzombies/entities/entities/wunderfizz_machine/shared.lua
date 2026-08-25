@@ -21,7 +21,7 @@ end
 function ENT:DecideOutcomePerk(ply, specific)
 	if specific then self:SetPerkID(specific) return end
 	
-	if self.TimesUsed > 2 and math.random(100) <= 55 and #ents.FindByClass("wundefizz_machine") > 1 then
+	if self.TimesUsed > 2 and math.random(100) <= 55 and #ents.FindByClass("wunderfizz_machine") > 1 then
 		return hook.Call("OnPlayerBuyWunderfizz", nil, ply, "teddy") or "teddy"
 	else
 		local blockedperks = {
@@ -56,6 +56,10 @@ function ENT:Initialize()
 		self:SetAutomaticFrameAdvance(true)
 		self:TurnOff(true)
 		self.TimesUsed = 0
+		
+		if !self:IsOn() then
+			self:SetBodygroup(1, 1)
+		end
 	end
 end
 
@@ -86,6 +90,7 @@ function ENT:Think()
 			local idle = self:LookupSequence("idle")
 			self:SetCycle(0)
 			self:ResetSequence(idle)
+			self:SetBodygroup(1, 0)
 			self:SetActive(true) -- Turn on here
 			self.GoIdle = nil
 			--print("idling")
@@ -113,13 +118,17 @@ function ENT:Use(activator, caller)
 				activator:Buy(price, self, function()
 					self:SetBeingUsed(true)
 					self:SetUser(activator)
+					self:ResetSequence(self:LookupSequence("spin_loop"))
+					self.GoIdle = CurTime() + 5
 					
 					self.OutcomePerk = self:DecideOutcomePerk(activator)
 					self.Bottle = ents.Create("wunderfizz_windup")
 					self.Bottle:SetPos(self:GetPos() + Vector(0,0,45))
 					self.Bottle:SetAngles(self:GetAngles() + Angle(0,-90,0))
+					self.Bottle:SetPerkID(self.OutcomePerk)
+					self.Bottle:SetUser(activator)
 					self.Bottle.WMachine = self
-					self.Bottle.Perk = self.OutcomePerk
+					--self.Bottle.Perk = self.OutcomePerk
 					self.Bottle:Spawn()
 					
 					timer.Simple(0, function()

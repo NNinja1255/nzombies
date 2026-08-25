@@ -8,6 +8,8 @@ ENT.Contact			= "Don't"
 ENT.Purpose			= ""
 ENT.Instructions	= ""
 
+ENT.AutomaticFrameAdvance = true
+
 function ENT:SetupDataTables()
 
 	self:NetworkVar( "Bool", 0, "Open" )
@@ -27,7 +29,7 @@ function ENT:Initialize()
 	end]]
 
 	self:DrawShadow( false )
-	self:AddEffects( EF_ITEM_BLINK )
+	--self:AddEffects( EF_ITEM_BLINK )
 	self:SetOpen(false)
 	self.Moving = false
 	self:Activate()
@@ -56,7 +58,11 @@ function ENT:Initialize()
 end
 
 function ENT:Use( activator, caller )
-	if self:GetOpen() == true or self.Moving then return end
+	if self.Moving then return end
+	if self:GetOpen() == true then
+		self.WindupEnt:Use(activator, caller)
+		return
+	end
 	self:BuyWeapon(activator)
 	-- timer.Simple(5,function() self:MoveAway() end)
 end
@@ -79,31 +85,31 @@ end
 
 
 function ENT:Open()
-	local sequence = self:LookupSequence("Close")
+	local sequence = self:LookupSequence("open")
 	self:ResetSequence(sequence)
-	self:RemoveEffects( EF_ITEM_BLINK )
+	--self:RemoveEffects( EF_ITEM_BLINK )
 
 	self:SetOpen(true)
 end
 
 function ENT:Close()
-	local sequence = self:LookupSequence("Open")
+	local sequence = self:LookupSequence("close")
 	self:ResetSequence(sequence)
-	self:AddEffects( EF_ITEM_BLINK )
+	--self:AddEffects( EF_ITEM_BLINK )
 
 	self:SetOpen(false)
 end
 
 function ENT:SpawnWeapon(activator, class)
 	local wep = ents.Create("random_box_windup")
-	local ang = self:GetAngles()
-	wep:SetAngles( ang )
-	wep:SetPos( self:GetPos() + ang:Up()*10 )
+	wep:SetAngles( self:GetAngles() )
+	wep:SetPos( self:GetPos() + self:GetUp()*8 )
 	wep:SetWepClass(class)
 	wep:Spawn()
 	wep.Buyer = activator
 	--wep:SetParent( self )
 	wep.Box = self
+	self.WindupEnt = wep
 	--wep:SetAngles( self:GetAngles() )
 	self:EmitSound("nz/randombox/random_box_jingle.wav")
 
@@ -126,69 +132,19 @@ function ENT:MoveAway()
 	self:SetSolid(SOLID_NONE)
 	local s = 0
 	local ang = self:GetAngles()
-	-- Shake Effect
-	timer.Create( "shake", 0.1, 300, function()
-		if s < 23 then
-			if s % 2 == 0 then
-				if self:IsValid() then
-					self:SetAngles(ang + Angle(10, 0, 0))
-				end
-			else
-				if self:IsValid() then
-					self:SetAngles(ang + Angle(-10, 0, 0))
-				end
-			end
-		else
-			self:SetAngles(ang)
-			timer.Destroy("shake")
-		end
-		s = s + 1
+	
+	local sequence = self:LookupSequence("leave")
+	self:ResetSequence(sequence)
+	self:SetNotSolid(true)
+	self:CollisionRulesChanged()
+	timer.Simple(self:SequenceDuration(), function()
+		self.Moving = false
+		self.SpawnPoint.Box = nil
+		self:MoveToNewSpot(self.SpawnPoint)
+		self:EmitSound("nz/randombox/poof.wav")
+		self:Remove()
 	end)
-
-	-- Move Up
-	timer.Simple( 1, function()
-		timer.Create( "moveAway", 5, 1, function()
-			self.Moving = false
-			timer.Destroy("moveAway")
-			timer.Destroy("shake")
-
-			self.SpawnPoint.Box = nil
-			--self.SpawnPoint:SetBodygroup(1,0)
-			self:MoveToNewSpot(self.SpawnPoint)
-			self:EmitSound("nz/randombox/poof.wav")
-			self:Remove()
-		end)
-		--print(self:GetMoveType())
-		self:SetMoveType(MOVETYPE_FLY)
-		self:SetGravity(0.1)
-		self:SetNotSolid(true)
-		self:SetCollisionBounds(Vector(0,0,0), Vector(0,0,0))
-		phys = self:GetPhysicsObject()
-		if IsValid(phys) then
-			phys:SetDamping(100, 0)
-		end
-		self:CollisionRulesChanged()
-		self:SetLocalVelocity(ang:Up()*100)
-		timer.Simple(1.5, function()
-			self:SetLocalVelocity( Vector(0,0,0) )
-			self:SetVelocity( Vector(0,0,0) )
-			self:SetMoveType(MOVETYPE_FLY)
-			self:Open()
-			self:SetLocalAngularVelocity( Angle(0, 0, 250) )
-			timer.Simple(0.5, function()
-				self:SetLocalAngularVelocity( Angle(0, 0, 500) )
-				timer.Simple(0.5, function()
-					self:SetLocalAngularVelocity( Angle(0, 0, 750) )
-					timer.Simple(0.2, function()
-						self:SetLocalAngularVelocity( Angle(0, 0, 1000) )
-						timer.Simple(0.2, function()
-							self:SetLocalAngularVelocity( Angle(0, 0, 2000) )
-						end)
-					end)
-				end)
-			end)
-		end)
-	end)
+	
 end
 
 function ENT:MoveToNewSpot(oldspot)
@@ -208,6 +164,10 @@ function ENT:MarkForRemoval()
 			end
 		end)
 	end]]
+end
+
+function ENT:UpdateTransmitState()
+	return self.Moving and TRANSMIT_PVS or TRANSMIT_ALWAYS
 end
 
 if CLIENT then

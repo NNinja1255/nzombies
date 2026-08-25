@@ -22,6 +22,12 @@ function ENT:Initialize()
 		self:SetRenderBounds(Vector(0,0,0), self:GetMaxBound())
 	end
 	self:SetCustomCollisionCheck(true)
+	if SERVER then
+		timer.Simple(0, function()
+			local phys = self:GetPhysicsObject()
+			phys:SetContents(CONTENTS_PLAYERCLIP + CONTENTS_MONSTERCLIP)
+		end)
+	end
 	--self:SetFilter(true, true)
 end
 
@@ -42,9 +48,8 @@ if CLIENT then
 	end
 end
 
--- Causes collisions to completely disappear, not just traces :(
---[[function ENT:TestCollision(start, delta, hulltrace, bounds)
-	return nil -- Traces pass through it!
+--[[function ENT:TestCollision(start, delta, isbox, bounds, contents)
+	if bit.band(bit.bnot(contents), CONTENTS_MONSTER) == 0 then return false end -- Traces pass through it!
 end]]
 
 hook.Add("PhysgunPickup", "nzInvisWallNotPickup", function(ply, wall)

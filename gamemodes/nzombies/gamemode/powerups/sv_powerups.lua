@@ -109,7 +109,7 @@ function nzPowerUps:FireSale()
 			local pos = v:GetPos()
 			local ang = v:GetAngles()
 			
-			box:SetPos( pos + ang:Up()*10 + ang:Right()*7 )
+			box:SetPos( pos + ang:Up()*10 )
 			box:SetAngles( ang )
 			box:Spawn()
 			--box:PhysicsInit( SOLID_VPHYSICS )

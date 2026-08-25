@@ -229,18 +229,22 @@ if SERVER then
 		if !wep then wep = weapons.Get(self.WeaponGive) end
 		if !wep then return end
 		local ammo_type = IsValid(wep) and wep:GetPrimaryAmmoType() or wep.Primary.Ammo
+		if wep.NZSpecialCategory != nil then
+			ammo_type = GetNZAmmoID(wep.NZSpecialCategory)
+		end
 
 		local ammo_price = math.ceil((price - (price % 10))/2)
 		local ammo_price_pap = 4500
 		local curr_ammo = activator:GetAmmoCount( ammo_type )
 		local give_ammo = nzWeps:CalculateMaxAmmo(self.WeaponGive) - curr_ammo
+		if wep.NZSpecialWeaponData != nil then
+			give_ammo = wep.NZSpecialWeaponData.MaxAmmo - curr_ammo
+		end
 
-		if (self:GetWepClass() == "nz_grenade") then 
-			local nade = activator:GetItem("grenade")
-			if (activator:HasPerk("widowswine") and (!nade or nade and nade.price < 4000)) then
+		if (wep.NZSpecialCategory == "grenade") then 
+			local nade = activator:GetSpecialWeaponFromCategory("grenade")
+			if activator:HasPerk("widowswine") then
 				ammo_price = 4000
-			elseif (nade and ammo_price < nade.price) then
-				ammo_price = nade.price
 			end
 		end
 		
@@ -248,36 +252,18 @@ if SERVER then
 
 		local replacementWep = nil
 		local hasReplacement = false
-		/*for _,v in pairs(nzWeps:GetAllReplacements(self.WeaponGive)) do
-			if isstring(v.ClassName) and activator:HasWeapon(v.ClassName) then
-				hasReplacement = true
-				replacementWep = activator:GetWeapon(v.ClassName)
-				give_ammo = nzWeps:CalculateMaxAmmo(v.ClassName) - curr_ammo
-			end
-		end*/
 
 		if !activator:HasWeapon( self.WeaponGive ) and !hasReplacement then
 			activator:Buy(price, self, function()
-				if (self.WeaponGive == "nz_grenade") then   -- This can mess up grenade pricing, don't give them it
-					local wep = activator:GetItem("grenade")
-					if (istable(wep)) then
-						activator:SetAmmo(wep.ammo, "nz_grenade")
-					end
-
-					activator:TakePoints(ammo_price)
-					return false
-				else
-					local wep = activator:Give(self.WeaponGive)
-					if (wep:GetSpecialCategory() == "specialgrenade") then
-						activator:SetAmmo(3, "nz_specialgrenade")
-					end
-	
-					timer.Simple(0, function() if IsValid(wep) then wep:GiveMaxAmmo() end end)
-				end
-
+			
+				local wep = activator:Give(self.WeaponGive)
+				
+				timer.Simple(0, function() if IsValid(wep) then wep:GiveMaxAmmo() end end)
+				
 				self:SetBought(true)
 				return true
 			end)
+			
 		elseif string.lower(ammo_type) != "none" and ammo_type != -1 then
 			print("Refilling ammo")
 			local wep = activator:GetWeapon(self.WeaponGive)
@@ -306,6 +292,7 @@ if SERVER then
 					end
 				end)
 			end
+			
 		end
 		return
 	end

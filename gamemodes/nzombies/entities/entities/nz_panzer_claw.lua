@@ -38,7 +38,7 @@ function ENT:Launch(dir)
 	self:SetAngles((dir*-1):Angle())
 	self:SetSequence(self:LookupSequence("anim_close"))
 	
-	self.AutoReturnTime = CurTime() + 5
+	self.AutoReturnTime = CurTime() + 1
 end
 
 function ENT:Grab(ply, pos) -- Pos is used for clients who may not have the Panzer valid yet
@@ -140,7 +140,7 @@ function ENT:Return() -- Emptyhanded return - Grab is with player
 	self.HasGrabbed = true
 
 	local panzer = self:GetPanzer()
-	if !IsValid(panzer) then self:Remove() return end
+	if !IsValid(panzer) and SERVER then self:Remove() return end
 
 	self:SetMoveType(MOVETYPE_FLY)
 	self:SetSolid(SOLID_NONE)
@@ -154,7 +154,7 @@ function ENT:Return() -- Emptyhanded return - Grab is with player
 end
 
 function ENT:Reattach(removed)
-	if !removed then self:Remove() end
+	if !removed and SERVER then self:Remove() end
 	
 	local panzer = self:GetPanzer()
 	if !IsValid(panzer) then return end
@@ -170,7 +170,9 @@ function ENT:StartTouch(ent)
 		elseif !IsValid(self.GrabbedPlayer) then
 			--print("Touched something else")
 			--self:Remove()
-			self:Return()
+			timer.Simple(0, function()
+				self:Return()
+			end)
 		end
 	else
 		self:Remove()
@@ -199,21 +201,21 @@ end
 
 
 function ENT:Think()
-	if SERVER then
-		if self.HasGrabbed then
-			local panzer = self:GetPanzer()
-			if !IsValid(panzer) then self:Remove() return end
-			
-			if !IsValid(self.GrabbedPlayer) and self:GetPos():DistToSqr(panzer:GetAttachment(panzer:LookupAttachment("clawlight")).Pos) <= 10000 then
-				self:Reattach()
-			end
-			
-			if IsValid(panzer) and self.GrabbedPlayer and !panzer:IsValidTarget(self.GrabbedPlayer) then
-				self:Release()
-			end
-		elseif CurTime() > self.AutoReturnTime then 
-			self:Return()
+	if !SERVER then return end
+	
+	if self.HasGrabbed then
+		local panzer = self:GetPanzer()
+		if !IsValid(panzer) then self:Remove() return end
+		
+		if !IsValid(self.GrabbedPlayer) and self:GetPos():DistToSqr(panzer:GetAttachment(panzer:LookupAttachment("clawlight")).Pos) <= 10000 then
+			self:Reattach()
 		end
+		
+		if IsValid(panzer) and self.GrabbedPlayer and !panzer:IsValidTarget(self.GrabbedPlayer) then
+			self:Release()
+		end
+	elseif CurTime() > self.AutoReturnTime then 
+		self:Return()
 	end
 end
 

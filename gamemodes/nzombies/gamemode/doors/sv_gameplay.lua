@@ -12,7 +12,7 @@ function nzDoors:OpenDoor( ent, ply )
 			ent:SetLocked(false)
 		end
 	elseif ent:IsButton() then
-		ent:UnlockButton(tobool(ent.rebuyable))
+		ent:UnlockButton(tobool(data.rebuyable), ply)
 	else
 		ent:UnlockDoor()
 	end

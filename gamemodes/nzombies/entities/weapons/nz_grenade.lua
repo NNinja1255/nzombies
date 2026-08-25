@@ -7,7 +7,7 @@ end
 
 if CLIENT then
 
-	SWEP.PrintName     	    = "M67 Grenade"			
+	SWEP.PrintName     	    = "Grenade"			
 	SWEP.Slot				= 1
 	SWEP.SlotPos			= 1
 	SWEP.DrawAmmo			= false

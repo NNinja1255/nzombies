@@ -6,7 +6,7 @@ local function RegisterDefaultSpecialWeps()
 	nzSpecialWeapons:AddKnife( "nz_one_inch_punch", true, 0.75, 1.5 )
 
 	nzSpecialWeapons:AddGrenade( "nz_grenade", 4, false, 0.85, false, 0.4 ) -- ALWAYS pass false instead of nil or it'll assume default value
-	nzSpecialWeapons:AddGrenade( "nz_grenade_nade", 4, false, 0.65, false, 0.4 )
+	nzSpecialWeapons:AddGrenade( "nz_grenade_bo2", 4, false, 0.65, false, 0.4 )
 	nzSpecialWeapons:AddSpecialGrenade( "nz_monkey_bomb", 3, false, 3, false, 0.4 )
 	
 	nzSpecialWeapons:AddDisplay( "nz_revive_morphine", false, function(wep)

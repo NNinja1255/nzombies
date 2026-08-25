@@ -32,26 +32,27 @@ function meta:UnlockDoor()
 		end
 end
 
-function meta:UnlockButton(rebuyable)
+function meta:UnlockButton(rebuyable, ply)
 	if self:IsButton() then
 		print("Unlocked button", self)
 		--print(self)
 		--self:Fire("unlock")
 		self:Fire("Unlock")
 		--self:Fire("press")
-		self:Fire("Press")
+		self:Fire("Press", nil, 0, ply, ply)
 		--self:Fire("pressin")
-		self:Fire("PressIn")
+		--self:Fire("PressIn", nil, 0, ply)
 		--self:Fire("pressout")
-		self:Fire("PressOut")
+		--self:Fire("PressOut", nil, 0, ply)
 		
 		-- Repurchasable buttons don't lock
 		if rebuyable then return end
 		
 		--self:Fire("lock")
-		self:Fire("Lock")
-		--self:SetKeyValue("wait",-1)
-		self:SetKeyValue("Wait",-1)
+		--self:Fire("Lock")
+		--self:SetKeyValue("wait","-1")
+		--self:SetKeyValue("Wait",-1)
+		self:SetSaveValue("m_flWait", 5000000)
 		
 		self:SetLocked(false)
 	end
@@ -61,7 +62,7 @@ function meta:LockButton()
 	if self:IsButton() then
 		self:SetLocked(true)
 		--self:Fire("lock", "", 0)
-		--self:Fire("Lock", "", 0)
+		self:Fire("Lock", "", 0)
 	end
 end
 

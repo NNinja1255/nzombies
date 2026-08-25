@@ -45,14 +45,17 @@ function ENT:Initialize()
 			if self:GetWepClass() == "nz_box_teddy" then
 				self:SetModel("models/hoff/props/teddy_bear/teddy_bear.mdl")
 				self:SetAngles( self.Box:GetAngles() + Angle(-90,90,0) )
-				self:SetLocalVelocity(self.Box:GetAngles():Up()*30)
+				self:SetLocalVelocity(vector_origin)
+				timer.Simple(2, function()
+					self:SetLocalVelocity(self.Box:GetUp()*48)
+				end)
 				nzNotifications:PlaySound("nzu/mysterybox/child.wav", 0)
 				self:SetIsTeddy(true)
 				if IsValid(self.Buyer) then self.Buyer:GivePoints(950) end -- Refund please
 			else
 				local wep = weapons.Get(self:GetWepClass())
 				self:SetModel(wep.WM or wep.WorldModel)
-				self:SetLocalVelocity(Vector(0,0,0)) -- Stop
+				self:SetLocalVelocity(vector_origin) -- Stop
 			end
 			--print(self:GetModel())
 		end)

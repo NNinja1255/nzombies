@@ -171,8 +171,11 @@ nzPerks:NewPerk("speed", {
 
 nzPerks:NewPerk("pap", {
 	name = "Pack-a-Punch",
-	off_model = "models/alig96/perks/packapunch/packapunch.mdl", //Find a new model.
-	on_model = "models/alig96/perks/packapunch/packapunch.mdl",
+	model = "models/alig96/perks/packapunch/packapunch.mdl", -- Got your new model right here -Hidden XOXO.
+	off_skin = 0,
+	on_skin = 1,
+	--off_model = "models/alig96/perks/packapunch/packapunch.mdl",
+	--on_model = "models/alig96/perks/packapunch/packapunch.mdl",
 	price = 0,
 	specialmachine = true, -- Prevents players from getting the perk when they buy it
 	nobuy = true, -- A "Buy" event won't run when this is used (we do that ourselves in its function)
@@ -181,6 +184,7 @@ nzPerks:NewPerk("pap", {
 	color = Color(200, 220, 220),
 	condition = function(self, ply, machine)
 		local wep = ply:GetActiveWeapon()
+		if !IsValid(wep) then return false end
 		if (!wep:HasNZModifier("pap") or wep:CanRerollPaP()) and !machine:GetBeingUsed() then
 			local reroll = false
 			if wep:HasNZModifier("pap") and wep:CanRerollPaP() then
@@ -220,61 +224,34 @@ nzPerks:NewPerk("pap", {
 
 			wep:Remove()
 			local wep = ents.Create("pap_weapon_fly")
-			local startpos = machine:GetPos() + ang:Forward()*30 + ang:Up()*25 + ang:Right()*-3
+			local startpos = machine:GetPos() + ang:Forward()*30 + ang:Up()*34
 			wep:SetPos(startpos)
 			wep:SetAngles(ang + Angle(0,90,0))
-			wep.WepClass = class
+			--wep.WepClass = class
+			wep:SetWeaponClass(class)
 			wep:Spawn()
-			local weapon = weapons.Get(class)
-			local model = (weapon and weapon.WM or weapon.WorldModel) or "models/weapons/w_rif_ak47.mdl"
-			if !util.IsValidModel(model) then model = "models/weapons/w_rif_ak47.mdl" end
-			wep:SetModel(model)
 			wep.machine = machine
 			wep.Owner = ply
-			wep:SetMoveType( MOVETYPE_FLY )
+			
+			wep:SetLocalVelocity(ang:Forward()*-30)
 
-			--wep:SetNotSolid(true)
-			--wep:SetGravity(0.000001)
-			--wep:SetCollisionBounds(Vector(0,0,0), Vector(0,0,0))
-			timer.Simple(0.5, function()
-				if IsValid(wep) then
-					wep:SetLocalVelocity(ang:Forward()*-30)
-				end
-			end)
-			timer.Simple(1.8, function()
+			timer.Simple(1.3, function()
 				if IsValid(wep) then
 					wep:SetMoveType(MOVETYPE_NONE)
-					wep:SetLocalVelocity(Vector(0,0,0))
+					wep:SetLocalVelocity(vector_origin)
 				end
 			end)
 			timer.Simple(3, function()
 				if IsValid(wep) and IsValid(machine) then
 					local weapon = weapons.Get(class)
 					if weapon and weapon.NZPaPReplacement and weapons.Get(weapon.NZPaPReplacement) then
-						local pos, ang = wep:GetPos(), wep:GetAngles()
-						wep:Remove()
-						wep = ents.Create("pap_weapon_fly") -- Recreate a new entity with the replacement class instead
-						wep:SetPos(pos)
-						wep:SetAngles(ang)
-						wep.WepClass = weapon.NZPaPReplacement
-						wep:Spawn()
-						wep.TriggerPos = startpos
-						
-						local replacewep = weapons.Get(weapon.NZPaPReplacement)
-						local model = (replacewep and replacewep.WM or replacewep.WorldModel) or "models/weapons/w_rif_ak47.mdl"
-						if !util.IsValidModel(model) then model = "models/weapons/w_rif_ak47.mdl" end
-						wep:SetModel(model) -- Changing the model and name
-						wep.machine = machine
-						wep.Owner = ply
-						wep:SetMoveType( MOVETYPE_FLY )
+						wep:SetWeaponClass(weapon.NZPaPReplacement)
 					end
 					
 					--print(wep, wep.WepClass, wep:GetModel())
 				
 					machine:EmitSound("nz/machines/pap_ready.wav")
-					wep:SetCollisionBounds(Vector(0,0,0), Vector(0,0,0))
-					wep:SetMoveType(MOVETYPE_FLY)
-					wep:SetGravity(0.000001)
+					wep:SetMoveType(MOVETYPE_NOCLIP)
 					wep:SetLocalVelocity(ang:Forward()*30)
 					--print(ang:Forward()*30, wep:GetVelocity())
 					wep:CreateTriggerZone(reroll)
@@ -287,7 +264,7 @@ nzPerks:NewPerk("pap", {
 					--print(wep:GetMoveType())
 					--print(ang:Forward()*30, wep:GetVelocity())
 					wep:SetMoveType(MOVETYPE_NONE)
-					wep:SetLocalVelocity(Vector(0,0,0))
+					wep:SetLocalVelocity(vector_origin)
 				end
 			end)
 			timer.Simple(10, function()
@@ -316,8 +293,11 @@ nzPerks:NewPerk("pap", {
 
 nzPerks:NewPerk("dtap2", {
 	name = "Double Tap II",
-	off_model = "models/alig96/perks/doubletap2/doubletap2_off.mdl",
-	on_model = "models/alig96/perks/doubletap2/doubletap2.mdl",
+	model = "models/alig96/perks/doubletap2/doubletap2.mdl",
+	on_skin = 1,
+	off_skin = 0,
+	--off_model = "models/alig96/perks/doubletap2/doubletap2_off.mdl",
+	--on_model = "models/alig96/perks/doubletap2/doubletap2.mdl",
 	price = 2000,
 	material = "models/perk_bottle/c_perk_bottle_dtap2",
 	icon = Material("perk_icons/dtap2.png", "smooth unlitgeneric"),
@@ -354,8 +334,11 @@ nzPerks:NewPerk("dtap2", {
 
 nzPerks:NewPerk("staminup", {
 	name = "Stamin-Up",
-	off_model = "models/alig96/perks/staminup/staminup_off.mdl",
-	on_model = "models/alig96/perks/staminup/staminup.mdl",
+	model = "models/alig96/perks/staminup/staminup.mdl",
+	on_skin = 1,
+	off_skin = 0,
+	--off_model = "models/alig96/perks/staminup/staminup_off.mdl",
+	--on_model = "models/alig96/perks/staminup/staminup.mdl",
 	price = 2000,
 	material = "models/perk_bottle/c_perk_bottle_stamin",
 	icon = Material("perk_icons/staminup.png", "smooth unlitgeneric"),
@@ -377,8 +360,11 @@ nzPerks:NewPerk("staminup", {
 
 nzPerks:NewPerk("phd", {
 	name = "PhD Flopper",
-	off_model = "models/alig96/perks/phd/phdflopper_off.mdl",
-	on_model = "models/alig96/perks/phd/phdflopper.mdl",
+	model = "models/alig96/perks/phd/phdflopper.mdl",
+	on_skin = 1,
+	off_skin = 0,
+	--off_model = "models/alig96/perks/phd/phdflopper_off.mdl",
+	--on_model = "models/alig96/perks/phd/phdflopper.mdl",
 	price = 2000,
 	material = "models/perk_bottle/c_perk_bottle_phd",
 	icon = Material("perk_icons/phd.png", "smooth unlitgeneric"),
@@ -391,8 +377,11 @@ nzPerks:NewPerk("phd", {
 
 nzPerks:NewPerk("deadshot", {
 	name = "Deadshot Daiquiri",
-	off_model = "models/alig96/perks/deadshot/deadshot_off.mdl",
-	on_model = "models/alig96/perks/deadshot/deadshot.mdl",
+	model = "models/alig96/perks/deadshot/deadshot.mdl",
+	on_skin = 1,
+	off_skin = 0,
+	--off_model = "models/alig96/perks/deadshot/deadshot_off.mdl",
+	--on_model = "models/alig96/perks/deadshot/deadshot.mdl",
 	price = 1500,
 	material = "models/perk_bottle/c_perk_bottle_deadshot",
 	icon = Material("perk_icons/deadshot.png", "smooth unlitgeneric"),
@@ -405,8 +394,11 @@ nzPerks:NewPerk("deadshot", {
 
 nzPerks:NewPerk("mulekick", {
 	name = "Mule Kick",
-	off_model = "models/alig96/perks/mulekick/mulekick_off.mdl",
-	on_model = "models/alig96/perks/mulekick/mulekick.mdl",
+	model = "models/alig96/perks/mulekick/mulekick.mdl",
+	off_skin = 0,
+	on_skin = 1,
+	--off_model = "models/alig96/perks/mulekick/mulekick_off.mdl",
+	--on_model = "models/alig96/perks/mulekick/mulekick.mdl",
 	price = 4000,
 	material = "models/perk_bottle/c_perk_bottle_mulekick",
 	icon = Material("perk_icons/mulekick.png", "smooth unlitgeneric"),
@@ -424,8 +416,11 @@ nzPerks:NewPerk("mulekick", {
 
 nzPerks:NewPerk("tombstone", {
 	name = "Tombstone Soda",
-	off_model = "models/alig96/perks/tombstone/tombstone_off.mdl",
-	on_model = "models/alig96/perks/tombstone/tombstone.mdl",
+	model = "models/alig96/perks/tombstone/tombstone.mdl",
+	on_skin = 1,
+	off_skin = 0,
+	--off_model = "models/alig96/perks/tombstone/tombstone_off.mdl",
+	--on_model = "models/alig96/perks/tombstone/tombstone.mdl",
 	price = 2000,
 	material = "models/perk_bottle/c_perk_bottle_tombstone",
 	icon = Material("perk_icons/tombstone.png", "smooth unlitgeneric"),
@@ -438,8 +433,11 @@ nzPerks:NewPerk("tombstone", {
 
 nzPerks:NewPerk("whoswho", {
 	name = "Who's Who",
-	off_model = "models/alig96/perks/whoswho/whoswho_off.mdl",
-	on_model = "models/alig96/perks/whoswho/whoswho.mdl",
+	model = "models/alig96/perks/whoswho/whoswho.mdl",
+	on_skin = 1,
+	off_skin = 0,
+	--off_model = "models/alig96/perks/whoswho/whoswho_off.mdl",
+	--on_model = "models/alig96/perks/whoswho/whoswho.mdl",
 	price = 15000,
 	material = "models/perk_bottle/c_perk_bottle_whoswho",
 	icon = Material("perk_icons/whoswho.png", "smooth unlitgeneric"),
@@ -452,8 +450,11 @@ nzPerks:NewPerk("whoswho", {
 
 nzPerks:NewPerk("cherry", {
 	name = "Electric Cherry",
-	off_model = "models/alig96/perks/cherry/cherry_off.mdl",
-	on_model = "models/alig96/perks/cherry/cherry.mdl",
+	model = "models/alig96/perks/cherry/cherry.mdl",
+	on_skin = 1,
+	off_skin = 0,
+	--off_model = "models/alig96/perks/cherry/cherry_off.mdl",
+	--on_model = "models/alig96/perks/cherry/cherry.mdl",
 	price = 2000,
 	material = "models/perk_bottle/c_perk_bottle_cherry",
 	icon = Material("perk_icons/cherry.png", "smooth unlitgeneric"),
@@ -466,8 +467,11 @@ nzPerks:NewPerk("cherry", {
 
 nzPerks:NewPerk("vulture", {
 	name = "Vulture Aid Elixir",
-	off_model = "models/alig96/perks/vulture/vultureaid_off.mdl",
-	on_model = "models/alig96/perks/vulture/vultureaid.mdl",
+	model = "models/alig96/perks/vulture/vultureaid.mdl",
+	on_skin = 1,
+	off_skin = 0,
+	--off_model = "models/alig96/perks/vulture/vultureaid_off.mdl",
+	--on_model = "models/alig96/perks/vulture/vultureaid.mdl",
 	price = 3000,
 	material = "models/perk_bottle/c_perk_bottle_vulture",
 	icon = Material("perk_icons/vulture.png", "smooth unlitgeneric"),

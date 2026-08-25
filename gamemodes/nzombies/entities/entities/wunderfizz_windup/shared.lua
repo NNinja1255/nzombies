@@ -29,6 +29,8 @@ local teddymat = "models/perk_bottle/c_perk_bottle_teddy"
 
 function ENT:SetupDataTables()
 	self:NetworkVar( "Bool", 0, "Winding" )
+	self:NetworkVar( "String", 0, "PerkID" )
+	self:NetworkVar( "Entity", 0, "User" )
 end
 
 function ENT:RandomizeSkin()
@@ -57,11 +59,11 @@ function ENT:Initialize()
 
 	if SERVER then
 		self:SetWinding(true)
-		//Stop winding up
+		-- Stop winding up
 		timer.Simple(5, function()
 			self:SetWinding(false)
 			
-			if self.Perk == "teddy" then
+			if self:GetPerkID() == "teddy" then
 				self:SetMaterial(teddymat)
 				machine:SetIsTeddy(true)
 				machine:GetUser():GivePoints(machine:GetPrice())
@@ -72,13 +74,17 @@ function ENT:Initialize()
 					end
 				end)
 			else
-				self:SetMaterial(nzPerks:Get(self.Perk).material)
+				self:SetMaterial(nzPerks:Get(self:GetPerkID()).material)
 			end
-			machine:SetPerkID(self.Perk)
+			machine:SetPerkID(self:GetPerkID())
 		end)
 		-- If we time out, remove the object
 		timer.Simple(25, function() if IsValid(self) then self:Remove() end end)
 	end
+end
+
+function ENT:Use(activator, caller, usetype, value)
+	self.WMachine:Use(activator, caller, usetype, value)
 end
 
 function ENT:WindUp( )

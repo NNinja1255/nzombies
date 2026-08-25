@@ -6,6 +6,8 @@ ENT.Author = "Zet0r"
 ENT.Spawnable = false
 ENT.AdminSpawnable = false
 
+ENT.AutomaticFrameAdvance = true
+
 ENT.ExplosionSounds = {
 	"nz/monkey/voice_explosion/explo_vox_00.wav",
 	"nz/monkey/voice_explosion/explo_vox_01.wav",
@@ -18,7 +20,7 @@ ENT.ExplosionSounds = {
 	"nz/monkey/voice_explosion/explo_vox_08.wav",
 	"nz/monkey/voice_explosion/explo_vox_09.wav",
 	"nz/monkey/voice_explosion/explo_vox_10.wav",
-	"nz/monkey/voice_explosion/explo_vox_11.wav",
+	"nz/monkey/voice_explosion/explo_vox_11.wav"
 }
 
 if SERVER then
@@ -76,7 +78,7 @@ function ENT:SetExplosionTimer( time )
 
 	SafeRemoveEntityDelayed( self, time +1 ) --fallback
 	
-	self:EmitSound("nz/monkey/music/song"..math.random(1,3)..".wav", 100)
+	self:EmitSound("nz/monkey/music/song"..math.random(1,3)..".wav", 90)
 	self.NextCymbal = CurTime()
 
 	timer.Simple(time - 1.5, function()

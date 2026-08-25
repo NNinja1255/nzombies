@@ -13,6 +13,7 @@ if CLIENT then
 	SWEP.DrawAmmo			= false
 	SWEP.DrawCrosshair		= false
 
+	SWEP.NZHudIcon = Material("grenade.png", "unlitgeneric smooth")
 end
 
 
@@ -46,7 +47,6 @@ SWEP.NextReload				= 1
 
 SWEP.cooktime = 0
 SWEP.CrossShrink = 50
-SWEP.restorerun = 0
 SWEP.ct = nil
 SWEP.FuckedUp = false
 
@@ -59,12 +59,10 @@ end
 function SWEP:Deploy()
 	self.ct = CurTime()
 	self.Owner:GetViewModel():SetPlaybackRate( 1.5 )
-	self.restorerun = self.Owner:GetRunSpeed()
 	self:SendWeaponAnim(ACT_VM_PULLBACK_HIGH)
 	--if !self.Owner:GetUsingSpecialWeapon() then
 		--self.Owner:EquipPreviousWeapon()
 	--end
-	timer.Simple(0.1, function() self.Owner:SetRunSpeed( self.Owner:GetWalkSpeed() ) end)
 	if !self.Owner:HasPerk("widowswine") then
 		timer.Create(self.Owner:EntIndex().."YouFuckedUp", 4.0, 1, function()
 			if self.Owner:GetActiveWeapon() != self then return end
@@ -167,7 +165,6 @@ end
 function SWEP:OnRemove()
 	self.cooktime = 0
 	if IsValid(self.Owner) then
-		self.Owner:SetRunSpeed(self.restorerun)
 		self.CrossShrink = 50
 		timer.Remove(self.Owner:EntIndex().."Cooking2")
 		timer.Remove(self.Owner:EntIndex().."YouFuckedUp")
@@ -178,10 +175,27 @@ end
 function SWEP:Holster( wep )
 	self.cooktime = 0
 	self.CrossShrink = 50
-	self.Owner:SetRunSpeed(self.restorerun)
 	timer.Remove(self.Owner:EntIndex().."Cooking2")
 	timer.Remove(self.Owner:EntIndex().."YouFuckedUp")
 	self.FuckedUp = false
 	--if not IsFirstTimePredicted() then return end
 	return true
 end
+
+sound.Add(
+{
+    name = "Weapon_M67.Pin",
+    channel = CHAN_WEAPON,
+    volume = 1.0,
+    soundlevel = 80,
+    sound = "nz/m67/pin.wav"
+})
+
+sound.Add(
+{
+    name = "Weapon_M67.Throw",
+    channel = CHAN_WEAPON,
+    volume = 0.75,
+    soundlevel = 80,
+    sound = "nz/m67/gren_throw.wav"
+})

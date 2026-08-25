@@ -67,7 +67,7 @@ end
 local shootsound = Sound("nz/deathmachine/loop_l_.wav")
 function SWEP:PrimaryAttack()
 	
-	self:SetNextPrimaryFire(CurTime() + 0.03)
+	self:SetNextPrimaryFire(CurTime() + 0.05)
 	self:EmitSound( shootsound )
 	
 	local shootpos = self.Owner:GetShootPos()
@@ -100,9 +100,7 @@ function SWEP:PostDrawViewModel()
 end
 
 function SWEP:NZSpecialHolster(wep)
-	--if IsValid(self.Owner) then
-	--	self.Owner:RemovePowerUp("deathmachine")
-	--end
+	self.Owner:RemovePowerUp("death_machine")
 	return true
 end
 

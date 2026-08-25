@@ -19,7 +19,7 @@ function nzRandomBox.Spawn(exclude, first)
 		local pos = rand:GetPos()
 		local ang = rand:GetAngles()
 		
-		box:SetPos( pos + ang:Up()*10 + ang:Right()*7 )
+		box:SetPos( pos + ang:Up()*10 )
 		box:SetAngles( ang )
 		box:Spawn()
 		--box:PhysicsInit( SOLID_VPHYSICS )
