@@ -24,6 +24,13 @@ ENT.DeathSequences = {
 	"nz_death3",
 }
 
+ENT.ElectrocutionSequences = {
+	"nz_electrocuted1",
+	"nz_electrocuted2",
+	"nz_electrocuted3",
+	"nz_electrocuted4"
+}
+
 ENT.AttackSounds = {
 	"nz/hellhound/attack/attack_00.wav",
 	"nz/hellhound/attack/attack_01.wav",
@@ -159,14 +166,32 @@ end
 function ENT:OnZombieDeath(dmgInfo)
 
 	self:SetRunSpeed(0)
-	self.loco:SetVelocity(Vector(0,0,0))
+	self.loco:SetVelocity(vector_origin)
 	self:Stop()
 	self:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
+	
+	local dmgtype = dmgInfo:GetDamageType()
+	
+	if bit.band(dmgtype, DMG_REMOVENORAGDOLL) > 0 then
+		self:Fire("Kill",0,0)
+		self:SetSaveValue("m_lifeState", 2)
+		self:EmitSound( self.DeathSounds[ math.random( #self.DeathSounds ) ], 100)
+		return
+	end
+	
+	if bit.band(dmgtype, DMG_DISSOLVE) > 0 then
+		self:Dissolve(0, 0)
+	end
+	
 	local seqstr = self.DeathSequences[math.random(#self.DeathSequences)]
+	if bit.band(dmgtype, DMG_SHOCK) > 0 then
+		seqstr = self.ElectrocutionSequences[math.random(#self.ElectrocutionSequences)]
+	end
 	local seq, dur = self:LookupSequence(seqstr)
 	-- Delay it slightly; Seems to fix it instantly getting overwritten
 	timer.Simple(0, function() 
 		if IsValid(self) then
+			self:SetSaveValue("m_lifeState", 1)
 			self:ResetSequence(seq)
 			self:SetCycle(0)
 		end 
@@ -174,6 +199,7 @@ function ENT:OnZombieDeath(dmgInfo)
 
 	timer.Simple(dur + 1, function()
 		if IsValid(self) then
+			self:SetSaveValue("m_lifeState", 2)
 			self:Remove()
 		end
 	end)
