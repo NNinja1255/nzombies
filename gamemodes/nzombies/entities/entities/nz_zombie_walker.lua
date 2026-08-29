@@ -261,6 +261,7 @@ function ENT:OnZombieDeath(dmgInfo)
 		self:Fire("Kill",0,0)
 	elseif bit.band(dmgtype, DMG_DISSOLVE) > 0 then
 		self:Dissolve(0, 0)
+		self:SetSaveValue("m_lifeState", 2)
 		self:BecomeRagdoll(dmg) -- will this work?
 	elseif bit.band(dmgtype, DMG_SHOCK) > 0 then
 		self:SetRunSpeed(0)
@@ -270,15 +271,18 @@ function ENT:OnZombieDeath(dmgInfo)
 		local seq, dur = self:LookupSequence(self.ElectrocutionSequences[math.random(#self.ElectrocutionSequences)])
 		self:ResetSequence(seq)
 		self:SetCycle(0)
+		self:SetSaveValue("m_lifeState", 1)
 												
 		-- Emit electrocution scream here when added
 		timer.Simple(dur, function()
 			if IsValid(self) then
+				self:SetSaveValue("m_lifeState", 2)
 				self:BecomeRagdoll(DamageInfo()) -- using dmgInfo crashes game (memory access violation)
 			end
 		end)
 	else
 		self:EmitSound( self.DeathSounds[ math.random( #self.DeathSounds ) ], 100)
+		self:SetSaveValue("m_lifeState", 2)
 		self:BecomeRagdoll(dmg)
 	end
 
