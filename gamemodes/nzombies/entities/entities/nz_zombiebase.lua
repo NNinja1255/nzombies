@@ -54,6 +54,8 @@ AccessorFunc( ENT, "iStuckCounter", "StuckCounter", FORCE_NUMBER)
 AccessorFunc( ENT, "vStuckAt", "StuckAt")
 AccessorFunc( ENT, "bTimedOut", "TimedOut")
 
+ENT.DeadWalkingCount = 0
+
 -- spawner accessor
 AccessorFunc(ENT, "hSpawner", "Spawner")
 
