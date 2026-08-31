@@ -57,40 +57,17 @@ function ENT:Check( ply )
 	
 	if success then
 		self:TriggerOutput("OnCheckSuccess")
+		return true
 	else
 		self:TriggerOutput("OnCheckFail")
+		return false
 	end
 end
 
 function ENT:CheckAndTake( ply )
-	local success = false
-	
-	for k,v in pairs(ply:GetCarryItems()) do
-		if v == self:GetID() then 
-			success = true 
-			break 
-		end
-	end
-	
-	
+	local success = self:Check(ply)
 	if success then
-		self:TriggerOutput("OnCheckSuccess")
 		ply:RemoveCarryItem(self:GetID())
-	else
-		self:TriggerOutput("OnCheckFail")
 	end
+	return success
 end
-/*
-function ENT:Initialize()
-	
-	self:SetModel( "models/MaxOfS2D/cube_tool.mdl" )
-	self:SetNoDraw(true)
-	--self:PhysicsInit(SOLID_NONE)
-	--self.Entity:SetMoveType( MOVETYPE_NONE )
-	--self.Entity:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
-	--self.Entity:SetSolid( SOLID_VPHYSICS )
-	--self.Entity:DrawShadow( false )
-	--self:SetNWBool("active", false)
-	--self:SetNWInt("souls", 0)
-end
-*/
