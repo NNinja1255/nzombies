@@ -7,7 +7,7 @@ ENT.Base = "base_point"
 ENT.PrintName		= ""
 ENT.Author			= "Hidden"
 ENT.Contact			= "steamcommunity.com/id/LambdaHidden (tell me you came because of this ENT in the comments)"
-ENT.Purpose			= "Fires outputs Fires outputs with game events such as Player Downed or Round Progressed. Will be removed if Map Extensions is not ticked in the loaded config."
+ENT.Purpose			= "Fires outputs with game events such as Player Downed or Round Progressed. Will be removed if Map Extensions is not ticked in the loaded config."
 ENT.Instructions	= ""
 
 ENT.Spawnable			= false
