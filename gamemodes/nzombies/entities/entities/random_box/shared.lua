@@ -88,6 +88,8 @@ function ENT:Open()
 	local sequence = self:LookupSequence("open")
 	self:ResetSequence(sequence)
 	--self:RemoveEffects( EF_ITEM_BLINK )
+	
+	self:EmitSound("nzu/mysterybox/open.wav")
 
 	self:SetOpen(true)
 end
@@ -96,6 +98,8 @@ function ENT:Close()
 	local sequence = self:LookupSequence("close")
 	self:ResetSequence(sequence)
 	--self:AddEffects( EF_ITEM_BLINK )
+	
+	self:EmitSound("nzu/mysterybox/close.wav")
 
 	self:SetOpen(false)
 end
